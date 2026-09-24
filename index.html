@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Halfway Home">
+<meta name="theme-color" content="#2b2140">
+<title>Halfway Home</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&family=Noto+Sans+Thai:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="device">
+  <div id="screen">
+    <canvas id="c" width="240" height="160"></canvas>
+    <div id="toast"></div>
+    <div id="panel" hidden></div>
+    <div id="choices" hidden></div>
+    <div id="dialog" class="box" hidden><div id="dialog-text"></div><span id="dialog-arrow">&#9660;</span></div>
+    <div id="title" hidden>
+      <div class="logo">HALFWAY<br>HOME</div>
+      <div class="sub">a little home between Italy &amp; Thailand</div>
+      <div class="press">PRESS A</div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <div id="dpad" aria-label="D-pad">
+      <span class="arm up"></span><span class="arm down"></span>
+      <span class="arm left"></span><span class="arm right"></span>
+      <span class="hub"></span>
+    </div>
+    <div id="ab">
+      <button class="btn round" data-k="b" aria-label="B">B</button>
+      <button class="btn round" data-k="a" aria-label="A">A</button>
+    </div>
+    <div id="ss">
+      <button class="btn pill" data-k="select" aria-label="Select"></button>
+      <button class="btn pill" data-k="start" aria-label="Start"></button>
+      <span>SELECT</span><span>START</span>
+    </div>
+  </div>
+</main>
+
+<div id="modal" hidden>
+  <form id="modal-form" autocomplete="off">
+    <h2 id="modal-title"></h2>
+    <div id="modal-fields"></div>
+    <div class="row">
+      <button type="button" id="modal-cancel">Cancel</button>
+      <button type="submit" id="modal-ok">OK</button>
+    </div>
+  </form>
+</div>
+
+<script type="module" src="js/game.js"></script>
+</body>
+</html>

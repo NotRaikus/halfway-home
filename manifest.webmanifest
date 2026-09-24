@@ -1,0 +1,27 @@
+{
+  "name": "Halfway Home",
+  "short_name": "Halfway Home",
+  "description": "A little home between Italy and Thailand, with a cat to raise together.",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1d1730",
+  "theme_color": "#2b2140",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
