@@ -1,5 +1,5 @@
 // Offline shell: serve cached files, refresh them in the background.
-const CACHE = 'halfway-home-v2';
+const CACHE = 'halfway-home-v3';
 const SHELL = ['./', 'index.html', 'style.css', 'manifest.webmanifest',
   'js/game.js', 'js/config.js', 'js/state.js', 'js/store.js', 'js/sprites.js', 'js/room.js', 'js/ui.js',
   'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];

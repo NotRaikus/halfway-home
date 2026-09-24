@@ -25,15 +25,21 @@ const place = tz => (tz || '').split('/').pop().replace(/_/g, ' ') || 'far away'
 
 // ------------------------------------------------------------------ screen size
 
+// The short side of the screen always shows 10 tiles; the camera follows you along the long side.
+const view = { w: 240, h: 160, s: 2 };
 function fit() {
-  const controls = 200;
-  const w = Math.min(innerWidth - 32, 960);
-  const wide = innerWidth / innerHeight > 4 / 3 && innerWidth >= 900;
-  const h = innerHeight - (wide ? controls + 70 : controls + 60);
-  const u = Math.max(1, Math.min(w / 240, h / 160));
-  document.documentElement.style.setProperty('--u', u + 'px');
+  const W = innerWidth, H = innerHeight;
+  const s = Math.min(W, H) / 160;
+  view.s = s;
+  view.w = Math.ceil(W / s);
+  view.h = Math.ceil(H / s);
+  cv.width = view.w; cv.height = view.h;
+  cv.style.width = view.w * s + 'px';
+  cv.style.height = view.h * s + 'px';
+  document.documentElement.style.setProperty('--u', s + 'px');
 }
 addEventListener('resize', fit);
+addEventListener('orientationchange', () => setTimeout(fit, 200));
 fit();
 
 // ------------------------------------------------------------------ input
@@ -70,29 +76,55 @@ addEventListener('keyup', e => {
 });
 addEventListener('blur', () => DIRS.forEach(d => (held[d] = false)));
 
-// D-pad: one touch area, direction from the thumb position, so you can slide between arrows.
-const dpad = document.getElementById('dpad');
-let dpadDir = null;
-function setDpad(dir) {
-  if (dir === dpadDir) return;
-  DIRS.forEach(d => { held[d] = d === dir; dpad.querySelector('.' + d).classList.toggle('on', d === dir); });
-  dpadDir = dir;
+// Floating joystick: put a thumb down anywhere and drag. A quick tap is the A button.
+const screenEl = document.getElementById('screen');
+const joy = document.getElementById('joy'), knob = joy.querySelector('.knob');
+let stick = null;   // { id, x, y, t, moved }
+let stickDir = null;
+function setStick(dir) {
+  if (dir === stickDir) return;
+  DIRS.forEach(d => { held[d] = d === dir; });
+  stickDir = dir;
   if (dir) press(dir);
 }
-function dpadAt(e) {
-  const b = dpad.getBoundingClientRect();
-  const dx = e.clientX - (b.left + b.width / 2), dy = e.clientY - (b.top + b.height / 2);
-  if (Math.hypot(dx, dy) < 10) return null;
-  return Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
+screenEl.addEventListener('pointerdown', e => {
+  if (stick || onTitle || e.target.closest('#dialog,#choices,#panel,#menu-btn,#title')) return;
+  e.preventDefault();
+  try { screenEl.setPointerCapture(e.pointerId); } catch { /* synthetic pointer */ }
+  stick = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), moved: false };
+  joy.style.left = e.clientX + 'px';
+  joy.style.top = e.clientY + 'px';
+  knob.style.transform = '';
+});
+screenEl.addEventListener('pointermove', e => {
+  if (!stick || e.pointerId !== stick.id) return;
+  const dx = e.clientX - stick.x, dy = e.clientY - stick.y, d = Math.hypot(dx, dy);
+  if (d > 14) { stick.moved = true; joy.classList.add('on'); }
+  if (!stick.moved) return;
+  const k = Math.min(d, 42) / (d || 1);
+  knob.style.transform = `translate(${dx * k}px, ${dy * k}px)`;
+  setStick(d < 14 ? null : Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down'));
+});
+function endStick(e) {
+  if (!stick || e.pointerId !== stick.id) return;
+  const tap = !stick.moved && performance.now() - stick.t < 350;
+  stick = null;
+  joy.classList.remove('on');
+  setStick(null);
+  if (tap) press(!document.getElementById('choices').hidden ? 'b' : 'a');
 }
-dpad.addEventListener('pointerdown', e => { e.preventDefault(); dpad.setPointerCapture(e.pointerId); setDpad(dpadAt(e)); });
-dpad.addEventListener('pointermove', e => { if (dpad.hasPointerCapture(e.pointerId)) setDpad(dpadAt(e)); });
-for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) dpad.addEventListener(ev, () => setDpad(null));
+for (const ev of ['pointerup', 'pointercancel']) screenEl.addEventListener(ev, endStick);
 
-for (const b of document.querySelectorAll('.btn')) {
-  b.addEventListener('pointerdown', e => { e.preventDefault(); b.classList.add('on'); press(b.dataset.k); });
-  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => b.classList.remove('on'));
-}
+document.getElementById('menu-btn').addEventListener('pointerdown', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  press(uiBusy() ? 'b' : 'start');
+});
+
+// iOS Safari ignores "user-scalable=no": stop double-tap and pinch zoom by hand (forms excepted).
+document.addEventListener('touchstart', e => { if (!e.target.closest('#modal')) e.preventDefault(); }, { passive: false });
+document.addEventListener('touchmove', e => { if (!e.target.closest('#modal')) e.preventDefault(); }, { passive: false });
+for (const ev of ['gesturestart', 'gesturechange', 'dblclick']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
 document.addEventListener('contextmenu', e => e.preventDefault());
 
 // ------------------------------------------------------------------ world
@@ -301,7 +333,42 @@ function drawPerson(frames, x, y, dir, frame, bob) {
   ctx.drawImage(frames[dir][frame], Math.round(x), Math.round(y) - 4 + bob);
 }
 
+const cam = { x: 0, y: 0 };
+function updateCamera() {
+  const axis = (p, size, room) => (size >= room ? -Math.floor((size - room) / 2) : Math.round(Math.max(0, Math.min(room - size, p - size / 2))));
+  cam.x = axis(player.x + 8, view.w, COLS * T);
+  cam.y = axis(player.y + 8, view.h, ROWS * T);
+}
+
+// The space around the room: a night sky between Italy and Thailand, drifting slowly.
+const STARS = Array.from({ length: 70 }, (_, i) => ({
+  x: (i * 97) % 256, y: (i * 61 + (i * i) % 37) % 256, big: i % 9 === 0, phase: i * 0.7,
+}));
+function drawSky(now) {
+  ctx.fillStyle = '#15102b';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  const drift = now / 4000;
+  for (let ox = 0; ox < cv.width + 256; ox += 256) {
+    for (let oy = 0; oy < cv.height + 256; oy += 256) {
+      for (const st of STARS) {
+        const x = Math.floor((st.x + drift + cam.x * -0.3) % 256 + 256) % 256 + ox - 256 / 2;
+        const y = Math.floor((st.y + cam.y * -0.3) % 256 + 256) % 256 + oy - 256 / 2;
+        const on = Math.sin(now / 700 + st.phase) > -0.6;
+        ctx.fillStyle = on ? '#fff6c9' : '#6b5fa8';
+        ctx.fillRect(x, y, 1, 1);
+        if (st.big && on) { ctx.fillRect(x - 1, y, 3, 1); ctx.fillRect(x, y - 1, 1, 3); }
+      }
+    }
+  }
+}
+
 function render(now) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  updateCamera();
+  drawSky(now);
+  ctx.setTransform(1, 0, 0, 1, -cam.x, -cam.y);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(-2, -2, COLS * T + 4, ROWS * T + 4);
   ctx.drawImage(bg, 0, 0);
   const tzOther = S.players[other()]?.tz || (TZ.includes('Bangkok') ? 'Europe/Rome' : 'Asia/Bangkok');
   drawWindow(ctx, tzOther, now);
@@ -352,7 +419,7 @@ function render(now) {
   // night where you are: dim the room, the lamp keeps a warm corner
   if (isNight(localHour(TZ, now))) {
     ctx.fillStyle = 'rgba(30, 30, 90, 0.28)';
-    ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.fillRect(0, 0, COLS * T, ROWS * T);
     const g = ctx.createRadialGradient(40, 30, 2, 40, 30, 46);
     g.addColorStop(0, 'rgba(255, 217, 142, 0.35)');
     g.addColorStop(1, 'rgba(255, 217, 142, 0)');

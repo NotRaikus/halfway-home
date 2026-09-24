@@ -26,30 +26,18 @@ body {
   touch-action: none;
 }
 
-#device {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px);
-  background: radial-gradient(120% 80% at 50% 0%, var(--shell-hi), var(--shell) 55%, var(--shell-lo));
-}
-
 #screen {
-  position: relative;
-  width: calc(var(--u) * 240);
-  height: calc(var(--u) * 160);
-  border-radius: 6px;
+  position: fixed;
+  inset: 0;
   overflow: hidden;
   background: #000;
-  box-shadow: 0 0 0 6px #241c36, 0 0 0 8px #15101f, 0 10px 30px rgba(0,0,0,.45);
-  flex: none;
+  touch-action: none;
 }
 #c {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: block;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
@@ -68,8 +56,10 @@ body {
   position: absolute;
   left: calc(var(--u) * 3);
   right: calc(var(--u) * 3);
-  bottom: calc(var(--u) * 3);
+  bottom: calc(var(--u) * 3 + env(safe-area-inset-bottom));
   min-height: calc(var(--u) * 42);
+  max-width: calc(var(--u) * 300);
+  margin: 0 auto;
   padding: calc(var(--u) * 5) calc(var(--u) * 8);
   font-size: calc(var(--u) * 10);
   line-height: 1.35;
@@ -88,7 +78,7 @@ body {
 #choices {
   position: absolute;
   right: calc(var(--u) * 3);
-  bottom: calc(var(--u) * 48);
+  bottom: calc(var(--u) * 48 + env(safe-area-inset-bottom));
   min-width: calc(var(--u) * 70);
   max-height: calc(var(--u) * 108);
   overflow: hidden;
@@ -96,7 +86,7 @@ body {
   font-size: calc(var(--u) * 10);
   line-height: 1.4;
 }
-#choices.solo { bottom: calc(var(--u) * 3); top: auto; }
+#choices.solo { bottom: auto; top: calc(var(--u) * 3 + env(safe-area-inset-top)); }
 #choices div { padding-left: calc(var(--u) * 9); position: relative; cursor: pointer; white-space: nowrap; }
 #choices div.on::before {
   content: "";
@@ -110,7 +100,10 @@ body {
 
 #panel {
   position: absolute;
-  inset: calc(var(--u) * 3);
+  inset: calc(var(--u) * 3 + env(safe-area-inset-top)) calc(var(--u) * 3) calc(var(--u) * 3 + env(safe-area-inset-bottom));
+  max-width: calc(var(--u) * 260);
+  max-height: calc(var(--u) * 170);
+  margin: auto;
   padding: calc(var(--u) * 5) calc(var(--u) * 8);
   font-size: calc(var(--u) * 9);
   line-height: 1.3;
@@ -128,9 +121,9 @@ body {
 
 #toast {
   position: absolute;
-  top: calc(var(--u) * 4);
+  top: calc(var(--u) * 4 + env(safe-area-inset-top));
   left: 50%;
-  transform: translate(-50%, -150%);
+  transform: translate(-50%, -300%);
   padding: calc(var(--u) * 2) calc(var(--u) * 6);
   background: rgba(42, 34, 51, .88);
   color: #ffe9a8;
@@ -166,65 +159,48 @@ body {
 @keyframes blink { 50% { opacity: 0; } }
 
 /* ---------------------------- controls ---------------------------- */
-#controls {
-  position: relative;
-  width: min(100%, 420px);
-  flex: none;
-  height: 230px;
-}
-#dpad {
+/* Floating joystick: appears where the thumb lands, follows the drag. */
+#joy {
   position: absolute;
-  left: 8px;
-  top: 18px;
-  width: 132px;
-  height: 132px;
-  touch-action: none;
+  width: 116px;
+  height: 116px;
+  margin: -58px 0 0 -58px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, .55);
+  background: rgba(255, 255, 255, .12);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .12s;
 }
-#dpad .arm, #dpad .hub { position: absolute; background: var(--btn); box-shadow: inset 0 -4px 0 rgba(0,0,0,.35); }
-#dpad .up    { left: 44px; top: 0;    width: 44px; height: 50px; border-radius: 6px 6px 0 0; }
-#dpad .down  { left: 44px; bottom: 0; width: 44px; height: 50px; border-radius: 0 0 6px 6px; }
-#dpad .left  { top: 44px; left: 0;    width: 50px; height: 44px; border-radius: 6px 0 0 6px; }
-#dpad .right { top: 44px; right: 0;   width: 50px; height: 44px; border-radius: 0 6px 6px 0; }
-#dpad .hub   { left: 44px; top: 44px; width: 44px; height: 44px; box-shadow: none; }
-#dpad .arm.on { background: #1a1428; box-shadow: inset 0 2px 0 rgba(0,0,0,.4); }
-
-#ab { position: absolute; right: 8px; top: 30px; width: 150px; height: 110px; }
-.btn {
-  font-family: var(--font);
+#joy.on { opacity: 1; }
+#joy .knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 50px;
+  height: 50px;
+  margin: -25px 0 0 -25px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .8);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+}
+#menu-btn {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 10px);
+  right: calc(env(safe-area-inset-right) + 10px);
+  width: 44px;
+  height: 44px;
   border: none;
-  color: #f6dbe3;
+  border-radius: 12px;
+  background: rgba(20, 14, 32, .55);
+  color: #fff;
+  font-size: 22px;
+  line-height: 44px;
+  padding: 0;
   cursor: pointer;
   touch-action: none;
 }
-.btn.round {
-  position: absolute;
-  width: 62px; height: 62px;
-  border-radius: 50%;
-  background: var(--btn-a);
-  font-size: 22px;
-  font-weight: 600;
-  box-shadow: inset 0 -5px 0 rgba(0,0,0,.3), 0 3px 0 rgba(0,0,0,.25);
-}
-.btn.round[data-k="b"] { left: 0; top: 40px; }
-.btn.round[data-k="a"] { right: 0; top: 0; }
-.btn.on, .btn:active { filter: brightness(.8); transform: translateY(2px); box-shadow: inset 0 -2px 0 rgba(0,0,0,.3); }
-
-#ss {
-  position: absolute;
-  left: 50%;
-  bottom: 12px;
-  transform: translateX(-50%);
-  display: grid;
-  grid-template-columns: 60px 60px;
-  column-gap: 16px;
-  row-gap: 4px;
-  justify-items: center;
-  font-size: 10px;
-  color: #e4dcf7;
-  letter-spacing: 1px;
-}
-.btn.pill { width: 50px; height: 14px; border-radius: 7px; background: var(--btn); transform: rotate(-20deg); }
-.btn.pill.on { transform: rotate(-20deg) translateY(2px); }
+#menu-btn:active { background: rgba(20, 14, 32, .8); }
 
 /* ---------------------------- modal form ---------------------------- */
 #modal {
@@ -278,8 +254,3 @@ body {
   cursor: pointer;
 }
 #modal-form button[type="submit"] { background: var(--btn-a); color: #fff; }
-
-/* Wide screens (desktop): screen and controls side by side */
-@media (min-aspect-ratio: 4/3) and (min-width: 900px) {
-  #controls { height: 190px; }
-}

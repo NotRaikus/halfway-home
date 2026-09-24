@@ -37,7 +37,8 @@ Nobody can list homes; a home can only be opened by whoever has its link.
 python -m http.server 8321
 ```
 
-Arrows move, Z = A, X = B, Enter = Start.
+On the phone: put a thumb down and drag to walk, tap to interact, ☰ for the menu.
+On a computer: arrows move, Z = A, X = B, Enter = Start.
 
 ## Roadmap
 

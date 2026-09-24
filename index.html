@@ -18,35 +18,18 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<main id="device">
-  <div id="screen">
-    <canvas id="c" width="240" height="160"></canvas>
-    <div id="toast"></div>
-    <div id="panel" hidden></div>
-    <div id="choices" hidden></div>
-    <div id="dialog" class="box" hidden><div id="dialog-text"></div><span id="dialog-arrow">&#9660;</span></div>
-    <div id="title" hidden>
-      <div class="logo">HALFWAY<br>HOME</div>
-      <div class="sub">a little home between Italy &amp; Thailand</div>
-      <div class="press">PRESS A</div>
-    </div>
-  </div>
-
-  <div id="controls">
-    <div id="dpad" aria-label="D-pad">
-      <span class="arm up"></span><span class="arm down"></span>
-      <span class="arm left"></span><span class="arm right"></span>
-      <span class="hub"></span>
-    </div>
-    <div id="ab">
-      <button class="btn round" data-k="b" aria-label="B">B</button>
-      <button class="btn round" data-k="a" aria-label="A">A</button>
-    </div>
-    <div id="ss">
-      <button class="btn pill" data-k="select" aria-label="Select"></button>
-      <button class="btn pill" data-k="start" aria-label="Start"></button>
-      <span>SELECT</span><span>START</span>
-    </div>
+<main id="screen">
+  <canvas id="c" width="240" height="160"></canvas>
+  <div id="joy"><div class="knob"></div></div>
+  <button id="menu-btn" aria-label="Menu">&#9776;</button>
+  <div id="toast"></div>
+  <div id="panel" hidden></div>
+  <div id="choices" hidden></div>
+  <div id="dialog" class="box" hidden><div id="dialog-text"></div><span id="dialog-arrow">&#9660;</span></div>
+  <div id="title" hidden>
+    <div class="logo">HALFWAY<br>HOME</div>
+    <div class="sub">a little home between Italy &amp; Thailand</div>
+    <div class="press">TAP TO START</div>
   </div>
 </main>
 
